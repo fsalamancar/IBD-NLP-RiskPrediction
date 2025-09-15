@@ -69,13 +69,49 @@ Develop an NLP pipeline to identify posts indicative of worsening/relapse in use
 
 ---
 
-## 3) Roles
-- **A — Data Engineer - Scraper**  
-  Implements scrapers, stores data, maintains CSV, anonymizes.  
-- **B — NLP Engineer - Annotation Lead**  
-  Defines annotation scheme, coordinates annotators, preprocesses text, trains baselines.  
-- **C — Modeler - Visualizer**  
-  Fine-tunes BERT, evaluates and explains models, builds visuals and final report.  
+## 3) Repo Structure
+
+Top level
+
+	•	README.md — project overview, setup, how to run scraping and notebooks.
+	•	requirements.txt — dependencies.
+	•	.gitignore — ignore data/raw, output, .env, .venv, checkpoints.
+	
+Source code
+	•	src/ibd_reddit/
+	•	init.py
+	•	extract.py — PRAW scraping utilities: scrape_subreddit, rate-limit handling, pagination.
+	•	pushshift.py — streaming .zst NDJSON readers and filters.
+	•	parse.py — text cleaning, field normalization, timestamps, subreddit filters.
+	•	io.py — path helpers, save/load CSV/Parquet to output/ and data/.
+	•	config.py — .env loading, constants (subreddit lists), runtime settings.
+	•	logging.py (optional) — simple, consistent logging formatters.
+	
+Scripts (CLI entrypoints)
+	•	scripts/
+	•	reddit_scrapper.py — fetch last 1000 posts per subreddit → output/{subreddit}_lastN_YYYYMMDD.csv.
+	•	reddit_extractor.py — batch/cron jobs (e.g., daily incremental runs) built on src functions.
+	•	test_connection.py — quick check for PRAW credentials and API reachability.
+	
+	
+Notebooks (main analysis lives here)
+	•	notebooks/
+	•	01_eda_ibd.ipynb — initial exploration of posts/comments.
+	•	02_clean_features.ipynb — cleaning, feature engineering, labels.
+	•	03_modeling_baseline.ipynb — baseline models/visuals.
+	•	99_scratchpad.ipynb — temporary experiments (can be git-ignored if preferred).
+
+Data lifecycle
+	•	data/
+	•	raw/ — immutable sources (original .zst dumps, raw API exports).
+	•	interim/ — temporary cleaned/intermediate tables.
+	•	processed/ — curated datasets ready for modeling/EDA.
+	
+Outputs and reports
+	•	output/
+	•	figures/ — exported plots for docs/reports.
+	•	reports/ — HTML/Markdown/PDF summaries if generated.	
+	
 
 ---
 
