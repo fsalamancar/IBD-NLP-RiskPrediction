@@ -5,10 +5,8 @@ import numpy as np
 import re
 import os
 from datetime import datetime
-import pandas as pd
 import time
-import pandas as pd
-import time
+import ast
 
 def process_file(comments_path, submissions_path, out_csv):
     """Versión final que evita problemas con apply sobre arrays."""
@@ -194,3 +192,103 @@ def combine_ibd_datasets(data_paths, output_path='../data/processed/IBD_complete
     except Exception as e:
         print(f"Error durante la concatenación: {e}")
         return None
+
+
+
+
+def preprocess_text_columns(df, output_path='../data/interim/IBD_estructured_text.csv'):
+    """
+    Preprocesa las columnas de texto con formato estructurado y saltos de línea.
+    
+    Formato de salida:
+    TÍTULO:
+    [título del post]
+    
+    CONTENIDO:
+    [selftext]
+    
+    COMENTARIOS:
+    - [comentario 1]
+    - [comentario 2]
+    - [comentario 3]
+    """
+    
+    def process_comments_column(comments_value):
+        """Procesa la columna comments que puede ser string, lista, o NaN."""
+        if pd.isna(comments_value) or comments_value == '':
+            return []
+        
+        if isinstance(comments_value, list):
+            return [str(comment).strip() for comment in comments_value if pd.notna(comment) and str(comment).strip()]
+        
+        if isinstance(comments_value, str):
+            if comments_value.strip().startswith('['):
+                try:
+                    comment_list = ast.literal_eval(comments_value)
+                    if isinstance(comment_list, list):
+                        return [str(comment).strip() for comment in comment_list if pd.notna(comment) and str(comment).strip()]
+                except:
+                    return [comments_value.strip()]
+            else:
+                return [comments_value.strip()]
+        
+        return []
+    
+    def clean_text(text):
+        """Limpia y normaliza texto."""
+        if pd.isna(text) or text == '' or str(text).lower() in ['nan', 'none', 'missing value']:
+            return ''
+        return str(text).strip()
+    
+    def combine_text_fields(row):
+        """Combina title, selftext y comments con formato estructurado."""
+        
+        title = clean_text(row['title'])
+        selftext = clean_text(row['selftext'])
+        comments_list = process_comments_column(row['comments'])
+        
+        combined_parts = []
+        
+        # Agregar título
+        if title:
+            combined_parts.append(f"TÍTULO:\n{title}")
+        
+        # Agregar contenido
+        if selftext:
+            combined_parts.append(f"CONTENIDO:\n{selftext}")
+        
+        # Agregar comentarios con viñetas
+        if comments_list:
+            comments_formatted = []
+            for comment in comments_list:
+                # Limitar longitud para evitar comentarios muy largos
+                comment_clean = comment[:500] + "..." if len(comment) > 500 else comment
+                comments_formatted.append(f"- {comment_clean}")
+            
+            comments_section = f"COMENTARIOS:\n" + "\n".join(comments_formatted)
+            combined_parts.append(comments_section)
+        
+        # Unir con doble salto de línea
+        return '\n\n'.join(combined_parts)
+    
+    print("Procesando columnas de texto con formato estructurado...")
+    
+    df_processed = df.copy()
+    df_processed['cuerpo'] = df_processed.apply(combine_text_fields, axis=1)
+    
+    # Estadísticas
+    total_rows = len(df_processed)
+    non_empty_cuerpo = (df_processed['cuerpo'] != '').sum()
+    
+    # Guardar resultado
+    print(f"\nGuardando dataset estructurado...")
+    import os
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    df_processed.to_csv(output_path, index=False)
+
+    print(f"Procesamiento completado:")
+    print(f"   Total filas: {total_rows:,}")
+    print(f"   Filas con contenido: {non_empty_cuerpo:,}")
+    print(f"   Archivo guardado: {output_path}")
+    
+    return df_processed
