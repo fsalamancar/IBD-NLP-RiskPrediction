@@ -38,10 +38,11 @@ data_paths = {
     'UCRDLA_1000': '../data/interim/UlcerativeColitisRDLA_last1000_20250915.csv'
 }
 
-# Ejecutar la función
+# Combinar las tablas en un solo dataset
 combined_dataset = combine_ibd_datasets(data_paths, '../data/interim/IBD_complete_dataset.csv')
-
-
 IBD_master_table = pd.read_csv('../data/interim/IBD_complete_dataset.csv')
-IBD_master_table = IBD_master_table.drop(columns=['created_utc','score','num_comments','comment_count','post_num_comments','permalink'])
+IBD_master_table = IBD_master_table.drop(columns=['score','num_comments','comment_count','post_num_comments','permalink'])
+
+
+#Preprocesado de las columnas de texto
 df_processed = preprocess_text_columns(IBD_master_table)

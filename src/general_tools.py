@@ -139,7 +139,7 @@ def combine_ibd_datasets(data_paths, output_path='../data/processed/IBD_complete
                 print(f"    {name}: No tiene 'author_comments' ni 'comments'")
     
     # Verificar compatibilidad de columnas
-    print("\n🔍 Verificando compatibilidad de columnas...")
+    print("\n Verificando compatibilidad de columnas...")
     all_columns = set()
     for name, df in dataframes.items():
         all_columns.update(df.columns)
@@ -271,9 +271,32 @@ def preprocess_text_columns(df, output_path='../data/interim/IBD_estructured_tex
         # Unir con doble salto de línea
         return '\n\n'.join(combined_parts)
     
+    
     print("Procesando columnas de texto con formato estructurado...")
     
     df_processed = df.copy()
+    
+    #Limpiar NAS segun la columna created_utc
+    df_processed = df_processed.dropna(subset=['created_utc'])
+    
+    #si selftext es NaN, rellenar con el valor de title
+    df_processed['selftext'] = df_processed.apply(lambda row: row['title'] if pd.isna(row['selftext']) else row['selftext'], axis=1)
+
+    # Transformar fechas robustamente
+    def convert_created_utc(val):
+        try:
+            # Try converting from float/int seconds
+            return pd.to_datetime(float(val), unit='s')
+        except (ValueError, TypeError):
+            # If fails, try parsing as string datetime
+            try:
+                return pd.to_datetime(val)
+            except Exception:
+                return pd.NaT
+
+    df_processed['created_utc'] = df_processed['created_utc'].apply(convert_created_utc)
+
+
     df_processed['cuerpo'] = df_processed.apply(combine_text_fields, axis=1)
     
     # Estadísticas
