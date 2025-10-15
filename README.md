@@ -1,10 +1,10 @@
-# Predicting Risk of Worsening in IBD Patients using NLP on Reddit and Twitter
+# Predicting Risk of Worsening in IBD Patients using NLP on Reddit
 
 ## Justification
 Patients often share symptoms and early warning signs of worsening conditions in forums and social media. A model capable of recognizing language associated with worsening may serve as a population surveillance tool and generate clinical hypotheses.
 
 ## Research Question
-Can we predict, with useful accuracy, the risk of worsening or relapse in IBD patients based on the language they use on Reddit and Twitter?
+Can we predict, with useful accuracy, the risk of worsening or relapse in IBD patients based on the language they use on Reddit?
 
 ## General Objective
 Develop an NLP pipeline to identify posts indicative of worsening/relapse in users discussing IBD on Reddit and Twitter, and evaluate its performance and main linguistic signals.
@@ -27,8 +27,7 @@ Develop an NLP pipeline to identify posts indicative of worsening/relapse in use
 ### Phase 1 — Data Collection
 - **Reddit**: use `praw` or `psaw` to extract posts + comments from subreddits:  
   r/IBD, r/CrohnsDisease, r/UlcerativeColitis, r/ChronicIllness  
-- **Twitter/X**: use `snscrape` to search tweets with keywords: “Crohn”, “colitis”, “flare”, “stool blood”, and key foods (from UKB).  
-- Store: id, date, author, subreddit/tweet, text, metadata (score, retweets).
+
 
 ### Phase 2 — Preprocessing
 - Normalization (lowercase etc), remove URLs, optional emoji removal, expand contractions, clean unnecessary symbols.
